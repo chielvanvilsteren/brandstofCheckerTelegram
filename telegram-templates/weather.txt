@@ -1,0 +1,13 @@
+🌤️ <b>Weersvoorspelling voor vandaag in Deventer:</b>
+
+🌅 <b>Ochtend</b>
+Temperatuur: {{morning_temp}} °C
+Regen: {{morning_rain}} mm
+
+🌇 <b>Middag</b>
+Temperatuur: {{middag_temp}} °C
+Regen: {{middag_rain}} mm
+
+🌃 <b>Avond</b>
+Temperatuur: {{avond_temp}} °C
+Regen: {{avond_rain}} mm
