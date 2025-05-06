@@ -60,14 +60,18 @@ function savePrices(prices) {
 function sendNotification(oldResults, newResults, forceSend = false) {
   let message = "⛽ Brandstofprijzen gecontroleerd\n\n";
 
-  // Controleer of er verandering is
   const changed =
     oldResults && JSON.stringify(oldResults) !== JSON.stringify(newResults);
 
-  if (changed) {
+  if (!oldResults) {
+    message += "📌 Eerste meting voltooid!\n\n";
+    message += "📋 Actuele prijzen:\n";
+    newResults.forEach((station) => {
+      message += `🔹 ${station.naam}: €${station.prijs}\n`;
+    });
+  } else if (changed) {
     message += "🔔 De volgende tankstations hebben nieuwe prijzen:\n";
 
-    // Toon enkel gewijzigde prijzen
     const lines = newResults.map((station, index) => {
       const oldPrice = oldResults[index]?.prijs;
       const newPrice = station.prijs;
@@ -79,23 +83,18 @@ function sendNotification(oldResults, newResults, forceSend = false) {
     });
 
     message += lines.filter(Boolean).join("\n") + "\n\n";
-
-    // Voeg alle huidige prijzen toe
     message += "📋 Actuele prijzen (alle tankstations):\n";
     newResults.forEach((station) => {
       message += `🔹 ${station.naam}: €${station.prijs}\n`;
     });
   } else {
-    message += "✅ Er zijn geen prijsveranderingen vandaag.\n\n";
-    message += "Huidige prijzen:\n";
-    newResults.forEach((station) => {
-      message += `🔹 ${station.naam}: €${station.prijs}\n`;
-    });
+    message +=
+      "🟢 Er zijn geen prijswijzigingen gevonden, de meest recente prijzen staan hierboven\n\n";
   }
 
-  message += "\n\n---\nDit bericht is automatisch gegenereerd door de brandstofprijschecker.";
+  message +=
+    "\n---\nDit bericht is automatisch gegenereerd door de brandstofprijschecker.";
 
-  // Stuur naar Telegram
   bot
     .sendMessage(process.env.TELEGRAM_CHAT_ID, message)
     .then(() => {
@@ -108,6 +107,8 @@ function sendNotification(oldResults, newResults, forceSend = false) {
 
 // Hoofdfunctie
 async function runCheck() {
+  const SEND_ALWAYS = true; // Stuur ook bericht als er geen verandering is
+
   try {
     const newResults = await getLatestPrices();
     const oldResults = getLastPrices();
@@ -124,8 +125,10 @@ async function runCheck() {
       sendNotification(oldResults, newResults);
     } else {
       console.log("✅ Geen prijsveranderingen.");
-      // Optioneel: altijd een bericht sturen
-      // sendNotification(oldResults, newResults, true);
+      if (SEND_ALWAYS) {
+        console.log("📧 Verstuur statusbericht zonder wijzigingen...");
+        sendNotification(oldResults, newResults, true);
+      }
     }
 
     savePrices(newResults);
