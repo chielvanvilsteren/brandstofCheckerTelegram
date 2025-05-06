@@ -114,7 +114,7 @@ async function runCheck() {
     const oldResults = getLastPrices();
 
     if (!oldResults) {
-      console.log("📌 Eerste keer uitgevoerd — sla huidige prijzen op");
+      console.log("📌 Eerste keer uitgevoerd — sla huidige prijzen op.");
       savePrices(newResults);
       sendNotification([], newResults, true); // Stuur "eerste meting"-bericht
       return;
