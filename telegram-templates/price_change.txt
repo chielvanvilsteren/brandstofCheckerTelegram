@@ -1,0 +1,11 @@
+⛽ Brandstofprijzen gecontroleerd
+
+🔔 De volgende tankstations hebben nieuwe prijzen: 📢
+
+{{changes}}
+
+📋 Actuele prijzen (alle tankstations):
+{{stations}}
+
+---
+Dit bericht is automatisch gegenereerd door de brandstofprijschecker.

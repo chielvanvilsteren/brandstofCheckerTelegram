@@ -29,16 +29,14 @@ const puppeteer = require("puppeteer");
     waitUntil: "domcontentloaded",
   });
 
-  // console.log("Pagina geladen, aan het scrapen...");
-
+  // Accepteer cookies
   try {
-    // Accepteer cookies
     await page.waitForSelector(".cc-btn.cc-allow", { timeout: 5000 });
     await page.click(".cc-btn.cc-allow");
   } catch {}
 
+  // Klik op 'Is goed'
   try {
-    // Klik op 'Is goed'
     await page.waitForSelector(".fc-primary-button", { timeout: 5000 });
     await page.click(".fc-primary-button");
   } catch {}
@@ -70,16 +68,19 @@ const puppeteer = require("puppeteer");
 
         return {
           naam: nameEl ? nameEl.innerText.trim() : "Onbekend",
-          prijs: priceEl ? priceEl.innerText.trim() : "Onbekend",
+          prijs: priceEl
+            ? priceEl.innerText
+                .trim()
+                .replace(/[€]+/g, "€") // Zorg voor één €-teken
+                .replace(/\./g, ",") // Punt → komma
+                .replace(/(\d+),(\d+)/, "$1,$2") // Zorg dat formaat klopt
+            : "Onbekend",
         };
       })
   );
 
   // Alleen JSON loggen (voor checker.js)
   console.log(JSON.stringify(results));
-
-  // // Optioneel: mooi overzicht in terminal
-  // console.table(results);
 
   await browser.close();
 })();

@@ -1,0 +1,9 @@
+⛽ Brandstofprijzen gecontroleerd
+
+📌 Eerste meting voltooid! 🎉
+
+📋 Actuele prijzen:
+{{stations}}
+
+---
+Dit bericht is automatisch gegenereerd door de brandstofprijschecker.

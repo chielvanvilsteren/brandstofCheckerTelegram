@@ -5,10 +5,20 @@ const { exec } = require("child_process");
 const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
 
+// Pad naar resultatenbestand
 const RESULTS_FILE = path.resolve(__dirname, "last-result.json");
 
 // Telegram bot initialiseren
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
+
+// Lees templatebestand
+function loadTemplate(name) {
+  const filePath = path.resolve(__dirname, "telegram-templates", `${name}.txt`);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Templatebestand niet gevonden: ${filePath}`);
+  }
+  return fs.readFileSync(filePath, "utf8");
+}
 
 // Functie om huidige prijzen op te halen
 async function getLatestPrices() {
@@ -56,47 +66,67 @@ function savePrices(prices) {
   fs.writeFileSync(RESULTS_FILE, JSON.stringify(prices, null, 2), "utf8");
 }
 
-// Stuur notificatie via Telegram
-function sendNotification(oldResults, newResults, forceSend = false) {
-  let message = "⛽ Brandstofprijzen gecontroleerd\n\n";
+// Formatteer tankstations voor bericht
+function formatStations(stations) {
+  return stations
+    .filter((s) => s.prijs !== "Onbekend")
+    .map((s) => `🔹 <b>${s.naam}</b>: ${s.prijs}`)
+    .join("\n");
+}
 
-  const changed =
-    oldResults && JSON.stringify(oldResults) !== JSON.stringify(newResults);
-
-  if (!oldResults) {
-    message += "📌 Eerste meting voltooid!\n\n";
-    message += "📋 Actuele prijzen:\n";
-    newResults.forEach((station) => {
-      message += `🔹 ${station.naam}: €${station.prijs}\n`;
-    });
-  } else if (changed) {
-    message += "🔔 De volgende tankstations hebben nieuwe prijzen:\n";
-
-    const lines = newResults.map((station, index) => {
-      const oldPrice = oldResults[index]?.prijs;
+// Formatteer prijsveranderingen
+function formatChanges(oldStations, newStations) {
+  return newStations
+    .map((station, i) => {
+      const oldPrice = oldStations[i]?.prijs;
       const newPrice = station.prijs;
 
       if (oldPrice && oldPrice !== newPrice) {
-        return `🔸 ${station.naam}: ⬅️ ${oldPrice} ➡️ ${newPrice}`;
+        return `🔸 <b>${station.naam}</b>: ⬅️ <i>${oldPrice}</i> ➡️ <b>${newPrice}</b>`;
       }
       return "";
-    });
+    })
+    .filter(Boolean)
+    .join("\n");
+}
 
-    message += lines.filter(Boolean).join("\n") + "\n\n";
-    message += "📋 Actuele prijzen (alle tankstations):\n";
-    newResults.forEach((station) => {
-      message += `🔹 ${station.naam}: €${station.prijs}\n`;
-    });
+// Stuur notificatie via Telegram
+function sendNotification(oldResults, newResults, forceSend = false) {
+  const changed =
+    oldResults && JSON.stringify(oldResults) !== JSON.stringify(newResults);
+
+  let templateName = "";
+  let replacements = {};
+
+  if (!oldResults) {
+    templateName = "first_run";
+    replacements = {
+      stations: formatStations(newResults),
+    };
+  } else if (changed) {
+    templateName = "price_change";
+    replacements = {
+      changes: formatChanges(oldResults, newResults),
+      stations: formatStations(newResults),
+    };
   } else {
-    message +=
-      "🟢 Er zijn geen prijswijzigingen gevonden, de meest recente prijzen staan hierboven\n\n";
+    templateName = "no_changes";
+    replacements = {
+      stations: formatStations(newResults),
+    };
   }
 
-  message +=
-    "\n---\nDit bericht is automatisch gegenereerd door de brandstofprijschecker.";
+  // Laad template
+  let message = loadTemplate(templateName);
 
+  // Vervang placeholders
+  for (const [key, value] of Object.entries(replacements)) {
+    message = message.replace(`{{${key}}}`, value);
+  }
+
+  // Verstuur bericht
   bot
-    .sendMessage(process.env.TELEGRAM_CHAT_ID, message)
+    .sendMessage(process.env.TELEGRAM_CHAT_ID, message, { parse_mode: "HTML" })
     .then(() => {
       console.log("📩 Bericht succesvol verzonden via Telegram.");
     })

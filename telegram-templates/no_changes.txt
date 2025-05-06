@@ -1,0 +1,9 @@
+⛽ Brandstofprijzen gecontroleerd
+
+🟢 Er zijn geen prijswijzigingen gevonden.
+
+📅 Laatste bekende prijzen:
+{{stations}}
+
+---
+Dit bericht is automatisch gegenereerd door de brandstofprijschecker.
