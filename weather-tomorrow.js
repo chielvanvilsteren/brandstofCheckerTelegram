@@ -1,16 +1,29 @@
-// evening-check.js
+// weather-tomorrow.js
 import fetch from "node-fetch";
 
-/**
- * Helper: bereken datum als YYYY-MM-DD
- */
 function formatDate(date) {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split("T")[0]; // blijft YYYY-MM-DD voor API-doelen
 }
 
-/**
- * Haal weervoorspelling op voor een specifieke dag
- */
+function formatEuropeanDate(date) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+  // Geeft: "5 april 2025"
+}
+
+function formatEuropeanDateWithWeekday(date) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+  // Geeft: "vrijdag 5 april 2025"
+}
+
 async function getWeatherForecast(targetDate) {
   const latitude = 52.2461; // Deventer
   const longitude = 6.1846;
@@ -59,57 +72,35 @@ async function getWeatherForecast(targetDate) {
       return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
-    console.log(`\n🌤️ Weersvoorspelling voor ${targetDate} in Deventer:\n`);
-    console.log(`🌅 Ochtend (06:00 – 12:00):`);
-    console.log(
-      `Gemiddelde temperatuur: ${
-        periods.morning.temp.length > 0
-          ? avg(periods.morning.temp).toFixed(1)
-          : "geen data"
-      } °C`
-    );
-    console.log(
-      `Verwachte regen: ${periods.morning.rain
-        .reduce((a, b) => a + b, 0)
-        .toFixed(1)} mm`
-    );
-
-    console.log(`\n🌇 Middag (12:00 – 18:00):`);
-    console.log(
-      `Gemiddelde temperatuur: ${
-        periods.afternoon.temp.length > 0
-          ? avg(periods.afternoon.temp).toFixed(1)
-          : "geen data"
-      } °C`
-    );
-    console.log(
-      `Verwachte regen: ${periods.afternoon.rain
-        .reduce((a, b) => a + b, 0)
-        .toFixed(1)} mm`
-    );
-
-    console.log(`\n🌃 Avond (18:00 – 24:00):`);
-    console.log(
-      `Gemiddelde temperatuur: ${
-        periods.evening.temp.length > 0
-          ? avg(periods.evening.temp).toFixed(1)
-          : "geen data"
-      } °C`
-    );
-    console.log(
-      `Verwachte regen: ${periods.evening.rain
-        .reduce((a, b) => a + b, 0)
-        .toFixed(1)} mm\n`
-    );
+    return {
+      datum: targetDate,
+      ochtend: {
+        temperatuur:
+          periods.morning.temp.length > 0 ? avg(periods.morning.temp) : null,
+        regen: periods.morning.rain.reduce((a, b) => a + b, 0),
+      },
+      middag: {
+        temperatuur:
+          periods.afternoon.temp.length > 0
+            ? avg(periods.afternoon.temp)
+            : null,
+        regen: periods.afternoon.rain.reduce((a, b) => a + b, 0),
+      },
+      avond: {
+        temperatuur:
+          periods.evening.temp.length > 0 ? avg(periods.evening.temp) : null,
+        regen: periods.evening.rain.reduce((a, b) => a + b, 0),
+      },
+    };
   } catch (error) {
     console.error("Fout bij ophalen van de weersvoorspelling:", error.message);
+    throw error;
   }
 }
 
-// === Start avondcheck ===
-const tomorrow = new Date();
-tomorrow.setDate(tomorrow.getDate() + 1);
-const tomorrowStr = formatDate(tomorrow);
-
-console.log("\n🌃 [AVOND] Ophalen weersvoorspelling voor MORGEN...");
-getWeatherForecast(tomorrowStr);
+export {
+  getWeatherForecast,
+  formatDate,
+  formatEuropeanDate,
+  formatEuropeanDateWithWeekday,
+};

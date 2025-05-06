@@ -7,7 +7,9 @@ const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
 
 // Telegram bot initialiseren
-const bot = new TelegramBot(process.env.TELEGRAM_WEATHER_BOT_TOKEN, { polling: false });
+const bot = new TelegramBot(process.env.TELEGRAM_WEATHER_BOT_TOKEN, {
+  polling: false,
+});
 
 // Pad naar templatebestand
 const TEMPLATE_PATH = path.resolve(
@@ -19,6 +21,7 @@ const TEMPLATE_PATH = path.resolve(
 // Formatteer weerbericht voor Telegram
 function formatWeather(data) {
   return `
+  <b>Goedemorgen!</b> 🌞
 🌤️ <b>Weersvoorspelling voor vandaag</b> (${data.datum})
 
 🌅 <b>Ochtend (06:00 – 12:00)</b>
