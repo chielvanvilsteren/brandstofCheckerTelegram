@@ -1,10 +1,21 @@
+// evening-check.js
 import fetch from "node-fetch";
 
-async function getWeatherForecast() {
+/**
+ * Helper: bereken datum als YYYY-MM-DD
+ */
+function formatDate(date) {
+  return date.toISOString().split("T")[0];
+}
+
+/**
+ * Haal weervoorspelling op voor een specifieke dag
+ */
+async function getWeatherForecast(targetDate) {
   const latitude = 52.2461; // Deventer
   const longitude = 6.1846;
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation_probability,precipitation&timezone=Europe/Amsterdam`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation&timezone=Europe/Amsterdam`;
 
   try {
     const response = await fetch(url);
@@ -13,8 +24,6 @@ async function getWeatherForecast() {
     const times = data.hourly.time;
     const temps = data.hourly.temperature_2m;
     const precipitation = data.hourly.precipitation;
-
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
     const periods = {
       morning: { start: "06:00", end: "12:00", temp: [], rain: [] },
@@ -27,7 +36,7 @@ async function getWeatherForecast() {
       const temp = temps[i];
       const rain = precipitation[i];
 
-      if (!time.startsWith(today)) continue;
+      if (!time.startsWith(targetDate)) continue;
 
       const hour = time.split("T")[1];
 
@@ -50,7 +59,7 @@ async function getWeatherForecast() {
       return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
-    console.log("\n🌤️ Weersvoorspelling voor vandaag in Deventer:\n");
+    console.log(`\n🌤️ Weersvoorspelling voor ${targetDate} in Deventer:\n`);
     console.log(`🌅 Ochtend (06:00 – 12:00):`);
     console.log(
       `Gemiddelde temperatuur: ${
@@ -97,4 +106,10 @@ async function getWeatherForecast() {
   }
 }
 
-getWeatherForecast();
+// === Start avondcheck ===
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+const tomorrowStr = formatDate(tomorrow);
+
+console.log("\n🌃 [AVOND] Ophalen weersvoorspelling voor MORGEN...");
+getWeatherForecast(tomorrowStr);
