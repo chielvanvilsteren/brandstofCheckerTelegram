@@ -1,0 +1,26 @@
+{
+    "name": "brandstofscraper",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "dotenv": "^16.5.0",
+        "node-telegram-bot-api": "^0.66.0",
+        "nodemailer": "^7.0.2",
+        "puppeteer": "^24.8.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chielvanvilsteren/brandstofCheckerTelegram.git"
+    },
+    "bugs": {
+        "url": "https://github.com/chielvanvilsteren/brandstofCheckerTelegram/issues"
+    },
+    "homepage": "https://github.com/chielvanvilsteren/brandstofCheckerTelegram#readme",
+    "description": ""
+}
