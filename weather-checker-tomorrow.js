@@ -68,7 +68,7 @@ async function sendWeatherMessage(data) {
     await bot.sendMessage(process.env.TELEGRAM_WEATHER_CHAT_ID, message, {
       parse_mode: "HTML",
     });
-    log("🌤️ Weerbericht succesvol verzonden via Telegram.");
+    log("🌤️ Weerbericht voor morgen succesvol verzonden via Telegram.");
   } catch (err) {
     error(`❌ Kon Telegram-weerbericht niet verzenden: ${err.message}`);
   }
@@ -77,12 +77,12 @@ async function sendWeatherMessage(data) {
 // Hoofdfunctie
 async function runWeatherCheck() {
   try {
+    log("🔄 Start weerchecker voor morgen...");
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = formatDate(tomorrow); // YYYY-MM-DD
     const tomorrowDisplay = formatEuropeanDate(tomorrow); // "5 mei 2025"
 
-    log("\n🌙 [AVOND] Ophalen weersvoorspelling voor MORGEN...");
     const weatherData = await getWeatherForecast(tomorrowStr);
 
     // Vervang de korte datum door de uitgeschreven versie

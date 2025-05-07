@@ -88,7 +88,7 @@ async function sendWeatherMessage(data) {
     await bot.sendMessage(process.env.TELEGRAM_WEATHER_CHAT_ID, message, {
       parse_mode: "HTML",
     });
-    log("🌤️ Weerbericht succesvol verzonden via Telegram.");
+    log("🌤️ Weerbericht van vandaag verzonden via Telegram.");
   } catch (err) {
     error(`❌ Kon Telegram-weerbericht niet verzenden: ${err.message}`);
   }
@@ -97,10 +97,10 @@ async function sendWeatherMessage(data) {
 // Hoofdfunctie
 async function runWeatherCheck() {
   try {
-    log("🔄 Start weerchecker...");
+    log("🔄 Start weerchecker voor vandaag...");
     const weatherData = await getLatestWeather();
     await sendWeatherMessage(weatherData);
-    log("✅ Weerchecker succesvol afgerond.");
+    log("✅ Weerchecker voor vandaag succesvol afgerond.");
   } catch (err) {
     error(`🚨 Er ging iets mis met het weerbericht: ${err.message}`);
   }
