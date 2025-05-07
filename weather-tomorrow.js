@@ -21,7 +21,6 @@ function formatEuropeanDateWithWeekday(date) {
     month: "long",
     year: "numeric",
   }).format(date);
-  // Geeft: "vrijdag 5 april 2025"
 }
 
 async function getWeatherForecast(targetDate) {

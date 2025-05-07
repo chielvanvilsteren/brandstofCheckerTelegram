@@ -18,24 +18,27 @@ const TEMPLATE_PATH = path.resolve(
   "weather.txt"
 );
 
+// Non-breaking space (goed voor mobiel)
+const nbsp = "\u00A0";
+
 // Formatteer weerbericht voor Telegram
 function formatWeather(data) {
   return `
-  <b>Goedemorgen!</b> 🌞
-🌤️ <b>Weersvoorspelling voor vandaag</b> (${data.datum})
+🌞 <b>Goedemorgen!</b>
+
+🌤️ <b>Weersvoorspelling voor vandaag</b> (${data.datumMetWeekdag})
 
 🌅 <b>Ochtend (06:00 – 12:00)</b>
-🌡️ Gemiddelde temperatuur: ${data.ochtend.temperatuur.toFixed(1)}°C
-💧 Regen: ${data.ochtend.regen.toFixed(1)} mm
+🌡️ Gemiddelde temperatuur:${nbsp}${data.ochtend.temperatuur.toFixed(1)}°C
+💧 Regen:${nbsp}${data.ochtend.regen.toFixed(1)} mm
 
 🌇 <b>Middag (12:00 – 18:00)</b>
-🌡️ Gemiddelde temperatuur: ${data.middag.temperatuur.toFixed(1)}°C
-💧 Regen: ${data.middag.regen.toFixed(1)} mm
+🌡️ Gemiddelde temperatuur:${nbsp}${data.middag.temperatuur.toFixed(1)}°C
+💧 Regen:${nbsp}${data.middag.regen.toFixed(1)} mm
 
 🌃 <b>Avond (18:00 – 24:00)</b>
-🌡️ Gemiddelde temperatuur: ${data.avond.temperatuur.toFixed(1)}°C
-💧 Regen: ${data.avond.regen.toFixed(1)} mm
-`;
+🌡️ Gemiddelde temperatuur:${nbsp}${data.avond.temperatuur.toFixed(1)}°C
+💧 Regen:${nbsp}${data.avond.regen.toFixed(1)} mm`;
 }
 
 // Lees templatebestand

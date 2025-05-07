@@ -1,9 +1,27 @@
 // weather-today.js
-
 import fetch from "node-fetch";
 
 function formatDate(date) {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split("T")[0]; // voor intern gebruik/API
+}
+
+function formatEuropeanDate(date) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+  // Geeft: "5 april 2025"
+}
+
+function formatEuropeanDateWithWeekday(date) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+  // Geeft: "vrijdag 5 april 2025"
 }
 
 async function getWeatherForecast(targetDate) {
@@ -56,8 +74,15 @@ async function getWeatherForecast(targetDate) {
       return Math.round(average * 10) / 10; // Afgerond op 1 decimaal
     }
 
+    // Maak de datumobjecten
+    const dateObject = new Date(targetDate); // Zet string om naar Date
+    const datumUitgeschreven = formatEuropeanDate(dateObject); // "5 april 2025"
+    const datumMetWeekdag = formatEuropeanDateWithWeekday(dateObject); // "vrijdag 5 april 2025"
+
     const result = {
-      datum: targetDate,
+      datum: targetDate, // blijft YYYY-MM-DD voor compatibiliteit
+      datumUitgeschreven, // "5 april 2025"
+      datumMetWeekdag, // "vrijdag 5 april 2025"
       ochtend: {
         temperatuur: avg(periods.morning.temp),
         regen: parseFloat(
