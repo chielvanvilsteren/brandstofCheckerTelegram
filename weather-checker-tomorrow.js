@@ -1,15 +1,20 @@
 // weather-checker-tomorrow.js
 
-import {
+const fs = require("fs");
+const path = require("path");
+const TelegramBot = require("node-telegram-bot-api");
+const dotenv = require("dotenv");
+
+// Importeer logger
+const { log, error } = require("./logger/logger.js");
+
+const {
   getWeatherForecast,
   formatDate,
   formatEuropeanDate,
-} from "./weather-tomorrow.js";
+} = require("./weather-tomorrow.js");
+// Importeer logger
 
-import fs from "fs";
-import path from "path";
-import TelegramBot from "node-telegram-bot-api";
-import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -48,6 +53,7 @@ function formatWeather(data) {
 // Lees templatebestand
 function loadTemplate() {
   if (!fs.existsSync(TEMPLATE_PATH)) {
+    error(`Templatebestand niet gevonden: ${TEMPLATE_PATH}`);
     throw new Error(`Templatebestand niet gevonden: ${TEMPLATE_PATH}`);
   }
   return fs.readFileSync(TEMPLATE_PATH, "utf8");
@@ -62,9 +68,9 @@ async function sendWeatherMessage(data) {
     await bot.sendMessage(process.env.TELEGRAM_WEATHER_CHAT_ID, message, {
       parse_mode: "HTML",
     });
-    console.log("🌤️ Weerbericht succesvol verzonden via Telegram.");
+    log("🌤️ Weerbericht succesvol verzonden via Telegram.");
   } catch (err) {
-    console.error("❌ Kon Telegram-weerbericht niet verzenden:", err.message);
+    error(`❌ Kon Telegram-weerbericht niet verzenden: ${err.message}`);
   }
 }
 
@@ -76,15 +82,16 @@ async function runWeatherCheck() {
     const tomorrowStr = formatDate(tomorrow); // YYYY-MM-DD
     const tomorrowDisplay = formatEuropeanDate(tomorrow); // "5 mei 2025"
 
-    console.log("\n🌙 [AVOND] Ophalen weersvoorspelling voor MORGEN...");
+    log("\n🌙 [AVOND] Ophalen weersvoorspelling voor MORGEN...");
     const weatherData = await getWeatherForecast(tomorrowStr);
 
     // Vervang de korte datum door de uitgeschreven versie
     weatherData.datum = tomorrowDisplay;
 
     await sendWeatherMessage(weatherData);
+    log("✅ Weerchecker voor morgen succesvol afgerond.");
   } catch (err) {
-    console.error("🚨 Er ging iets mis met het weerbericht:", err.message);
+    error(`🚨 Er ging iets mis met het weerbericht: ${err.message}`);
   }
 }
 

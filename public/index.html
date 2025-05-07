@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌤️ Weerchecker Logs</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      color: #222;
+    }
+    pre {
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌤️ Weerchecker Logs</h1>
+
+  <h2>📄 Informatie logs</h2>
+  <pre id="logs">Laden...</pre>
+
+  <h2>🔴 Foutmeldingen</h2>
+  <pre id="errors">Laden...</pre>
+
+  <script>
+    async function fetchLogs() {
+      const response = await fetch('/api/logs');
+      const text = await response.text();
+      document.getElementById('logs').textContent = text;
+    }
+
+    async function fetchErrors() {
+      const response = await fetch('/api/errors');
+      const text = await response.text();
+      document.getElementById('errors').textContent = text;
+    }
+
+    // Laad logs direct bij openen
+    fetchLogs();
+    fetchErrors();
+
+    // Ververs elke 5 seconden
+    setInterval(fetchLogs, 5000);
+    setInterval(fetchErrors, 5000);
+  </script>
+</body>
+</html>

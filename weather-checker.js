@@ -1,10 +1,12 @@
 // weather-checker.js
-
 const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
 const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
+
+// Importeer logger
+const { log, error } = require("./logger/logger.js");
 
 // Telegram bot initialiseren
 const bot = new TelegramBot(process.env.TELEGRAM_WEATHER_BOT_TOKEN, {
@@ -44,6 +46,7 @@ function formatWeather(data) {
 // Lees templatebestand
 function loadTemplate() {
   if (!fs.existsSync(TEMPLATE_PATH)) {
+    error(`Templatebestand niet gevonden: ${TEMPLATE_PATH}`);
     throw new Error(`Templatebestand niet gevonden: ${TEMPLATE_PATH}`);
   }
   return fs.readFileSync(TEMPLATE_PATH, "utf8");
@@ -52,14 +55,16 @@ function loadTemplate() {
 // Haal actuele weerdata op via weather-today.js
 async function getLatestWeather() {
   return new Promise((resolve, reject) => {
-    exec("node weather-today.js", (error, stdout, stderr) => {
-      if (error) {
-        return reject(`Fout bij uitvoeren weather script: ${error.message}`);
+    exec("node weather-today.js", (execError, stdout, stderr) => {
+      if (execError) {
+        error(`Fout bij uitvoeren weather script: ${execError.message}`);
+        return reject(execError);
       }
 
       // Zoek JSON-achtige data met regex
       const match = stdout.match(/({[\s\S]*})/);
       if (!match) {
+        error("Geen geldige JSON of data gevonden in output.");
         return reject("Geen geldige JSON of data gevonden in output.");
       }
 
@@ -67,7 +72,7 @@ async function getLatestWeather() {
         const result = JSON.parse(match[0]);
         resolve(result);
       } catch (e) {
-        console.warn("Kon JSON niet parsen:", e.message);
+        error(`Kon JSON niet parsen: ${e.message}`);
         return reject("Kan output niet omzetten naar geldige JSON.");
       }
     });
@@ -83,19 +88,21 @@ async function sendWeatherMessage(data) {
     await bot.sendMessage(process.env.TELEGRAM_WEATHER_CHAT_ID, message, {
       parse_mode: "HTML",
     });
-    console.log("🌤️ Weerbericht succesvol verzonden via Telegram.");
+    log("🌤️ Weerbericht succesvol verzonden via Telegram.");
   } catch (err) {
-    console.error("❌ Kon Telegram-weerbericht niet verzenden:", err.message);
+    error(`❌ Kon Telegram-weerbericht niet verzenden: ${err.message}`);
   }
 }
 
 // Hoofdfunctie
 async function runWeatherCheck() {
   try {
+    log("🔄 Start weerchecker...");
     const weatherData = await getLatestWeather();
     await sendWeatherMessage(weatherData);
+    log("✅ Weerchecker succesvol afgerond.");
   } catch (err) {
-    console.error("🚨 Er ging iets mis met het weerbericht:", err.message);
+    error(`🚨 Er ging iets mis met het weerbericht: ${err.message}`);
   }
 }
 
