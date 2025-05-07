@@ -5,6 +5,9 @@ const { exec } = require("child_process");
 const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
 
+// Importeer logger
+const { log, error } = require("./logger/logger.js");
+
 // Pad naar resultatenbestand
 const RESULTS_FILE = path.resolve(__dirname, "last-result.json");
 
@@ -15,6 +18,7 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
 function loadTemplate(name) {
   const filePath = path.resolve(__dirname, "telegram-templates", `${name}.txt`);
   if (!fs.existsSync(filePath)) {
+    error(`Templatebestand niet gevonden: ${filePath}`);
     throw new Error(`Templatebestand niet gevonden: ${filePath}`);
   }
   return fs.readFileSync(filePath, "utf8");
@@ -23,30 +27,37 @@ function loadTemplate(name) {
 // Functie om huidige prijzen op te halen
 async function getLatestPrices() {
   return new Promise((resolve, reject) => {
-    exec("node scrape.js", (error, stdout, stderr) => {
-      if (error) {
-        return reject(`Fout bij uitvoeren scraper: ${error.message}`);
+    log("🔄 Ophalen nieuwste brandstofprijzen...");
+
+    exec("node scrape.js", (execError, stdout, stderr) => {
+      if (execError) {
+        error(`Fout bij uitvoeren scraper: ${execError.message}`);
+        return reject(execError);
       }
 
       // Probeer direct te parsen als JSON
       try {
         const result = JSON.parse(stdout);
+        log("✅ Prijzen succesvol opgehaald.");
         return resolve(result);
       } catch (e) {
-        console.warn("Directe JSON-parse mislukt, probeer regex...");
+        log("🔍 Directe JSON-parse mislukt, probeer regex...");
       }
 
       // Zoek met regex naar eerste geldige JSON-array/object
       const match = stdout.match(/(\$$[\s\S]*\$|{[\s\S]*})/);
       if (!match) {
+        error("❌ Geen geldige JSON gevonden in output.");
         return reject("Geen geldige JSON gevonden in output.");
       }
 
       try {
         const result = JSON.parse(match[0]);
+        log("✅ Prijzen succesvol geparset met regex.");
         resolve(result);
       } catch (e) {
-        reject(`Kan JSON niet parsen: ${e.message}`);
+        error(`❌ Kan JSON niet parsen: ${e.message}`);
+        reject(e);
       }
     });
   });
@@ -64,6 +75,7 @@ function getLastPrices() {
 // Sla nieuwe resultaten op
 function savePrices(prices) {
   fs.writeFileSync(RESULTS_FILE, JSON.stringify(prices, null, 2), "utf8");
+  log("💾 Huidige prijzen opgeslagen.");
 }
 
 // Formatteer tankstations voor bericht
@@ -117,22 +129,25 @@ function sendNotification(oldResults, newResults, forceSend = false) {
   }
 
   // Laad template
-  let message = loadTemplate(templateName);
+  try {
+    let message = loadTemplate(templateName);
 
-  // Vervang placeholders
-  for (const [key, value] of Object.entries(replacements)) {
-    message = message.replace(`{{${key}}}`, value);
+    // Vervang placeholders
+    for (const [key, value] of Object.entries(replacements)) {
+      message = message.replace(`{{${key}}}`, value || "Geen gegevens");
+    }
+
+    // Verstuur bericht
+    bot.sendMessage(process.env.TELEGRAM_CHAT_ID, message, { parse_mode: "HTML" })
+      .then(() => {
+        log("📩 Bericht succesvol verzonden via Telegram.");
+      })
+      .catch((err) => {
+        error(`❌ Kon Telegram-bericht niet verzenden: ${err.message}`);
+      });
+  } catch (err) {
+    error(`❌ Fout bij laden template: ${err.message}`);
   }
-
-  // Verstuur bericht
-  bot
-    .sendMessage(process.env.TELEGRAM_CHAT_ID, message, { parse_mode: "HTML" })
-    .then(() => {
-      console.log("📩 Bericht succesvol verzonden via Telegram.");
-    })
-    .catch((err) => {
-      console.error("❌ Kon Telegram-bericht niet verzenden:", err.message);
-    });
 }
 
 // Hoofdfunctie
@@ -140,30 +155,32 @@ async function runCheck() {
   const SEND_ALWAYS = true; // Stuur ook bericht als er geen verandering is
 
   try {
+    log("🚀 Start brandstofcheck...");
+
     const newResults = await getLatestPrices();
     const oldResults = getLastPrices();
 
     if (!oldResults) {
-      console.log("📌 Eerste keer uitgevoerd — sla huidige prijzen op.");
+      log("📌 Eerste keer uitgevoerd — sla huidige prijzen op.");
       savePrices(newResults);
       sendNotification([], newResults, true); // Stuur "eerste meting"-bericht
       return;
     }
 
     if (JSON.stringify(oldResults) !== JSON.stringify(newResults)) {
-      console.log("🔔 Prijsverandering gedetecteerd!");
+      log("🔔 Prijsverandering gedetecteerd!");
       sendNotification(oldResults, newResults);
     } else {
-      console.log("✅ Geen prijsveranderingen.");
+      log("✅ Geen prijsveranderingen.");
       if (SEND_ALWAYS) {
-        console.log("📧 Verstuur statusbericht zonder wijzigingen...");
+        log("📧 Verstuur statusbericht zonder wijzigingen...");
         sendNotification(oldResults, newResults, true);
       }
     }
 
     savePrices(newResults);
   } catch (err) {
-    console.error("🚨 Er ging iets mis:", err.message);
+    error(`🚨 Er ging iets mis: ${err.message}`);
   }
 }
 
