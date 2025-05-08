@@ -28,7 +28,7 @@ function formatWeather(data) {
   return `
 🌞 <b>Goedemorgen!</b>
 
-🌤️ <b>Weersvoorspelling voor vandaag</b> (${data.datumMetWeekdag})
+🌤️ <b>Weersvoorspelling voor vandaag in Utrecht</b> (${data.datumMetWeekdag})
 
 🌅 <b>Ochtend (06:00 – 12:00)</b>
 🌡️ Gemiddelde temperatuur:${nbsp}${data.ochtend.temperatuur.toFixed(1)}°C

@@ -34,7 +34,7 @@ const TEMPLATE_PATH = path.resolve(
 function formatWeather(data) {
   return `
   <b>Goedenavond! </b> 🌙
-  🌤️ <b>Weersvoorspelling voor morgen</b> (${data.datum})
+  🌤️ <b>Weersvoorspelling voor morgen in Utrecht</b> (${data.datum})
   
   🌅 <b>Ochtend (06:00 – 12:00)</b>
   🌡️ Temperatuur: ${data.ochtend.temperatuur?.toFixed(1) ?? "N/A"}°C
