@@ -25,10 +25,9 @@ function formatEuropeanDateWithWeekday(date) {
 }
 
 async function getWeatherForecast(targetDate) {
-  // const latitude = 52.2461; // Deventer
-  // const longitude = 6.1846;
-  const latitude = 52.0907; // Utrecht
-  const longitude = 5.1214;
+  const latitude = 52.2461; // Deventer
+  const longitude = 6.1846;
+
 
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation&timezone=Europe/Amsterdam`;
 
